@@ -1,0 +1,85 @@
+# 🤖 AI Browser (aibrowser)
+
+[![Electron](https://img.shields.io/badge/Electron-31.0.0-47848F?logo=electron&logoColor=white)](https://www.electronjs.org/)
+[![Gemini](https://img.shields.io/badge/Gemini-3.5%20Flash-blue?logo=google-gemini&logoColor=white)](https://deepmind.google/technologies/gemini/)
+[![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+
+**AI Browser**는 일렉트론(Electron)과 구글 제미나이(Gemini) 모델을 융합하여, 사람처럼 마우스 클릭, 키보드 입력, 스크롤 및 탭 탐색을 수행하는 **에이전트 웹 브라우저 자동화 애플리케이션**입니다. 
+
+기존의 단순한 Selenium/Puppeteer 기반 스크립팅에서 벗어나, 사용자가 입력한 고수준의 자연어 목표(Goal)를 분석하고 실시간으로 최선의 화면 동작을 결정하여 실행합니다.
+
+---
+
+## ✨ 핵심 기능 (Key Features)
+
+1. **지능형 브라우저 제어 에이전트**
+   * 자연어로 된 목표(예: *"오늘 주식시황을 분석해서 내 티스토리 블로그에 포스팅해줘"*)를 입력하면 AI가 실시간으로 화면의 DOM을 분석하여 적절한 링크 클릭, 글자 입력, 화면 스크롤 등의 연속적인 동작을 자동 계획 및 실행합니다.
+   
+2. **크로스 오리진(Cross-Origin) 및 아이프레임(Iframe) 순회 지원**
+   * 웹 보안 정책(CORS)과 동일 출처 정책(Same-Origin Policy)을 우회할 수 있도록 설계되어, 티스토리 에디터와 같이 서로 다른 도메인의 `<iframe>` 내부에 탑재된 본문 에디터 창(`contenteditable="true"`)까지 탐색하고 타이핑할 수 있습니다.
+
+3. **Gemini 딥서치 & 실시간 검색(Search Grounding) 통합**
+   * 에이전트 브레인 내부에서 제미나이의 실시간 구글 검색 API(`tools: [{ google_search: {} }]`) 및 최신 프론티어 모델인 **Gemini 3.5 Flash**를 연동하여 가동합니다.
+   * 브라우저 화면상에서 구글 검색창을 거치지 않고 백그라운드에서 실시간 분석 정보를 완성한 뒤, 목표 사이트(티스토리 등)로 바로 진입하여 자동 작성을 수행합니다.
+
+4. **다이내믹 멀티탭 관리**
+   * 자동화 진행 중 링크 클릭 또는 `window.open` 등으로 새 창이 뜰 경우, 에이전트가 활성화된 탭을 실시간으로 추적하여 멀티탭 환경에서도 끊김 없이 자동화를 이어나갑니다.
+
+5. **인스타그램 미디어 스니퍼 및 완전한 비디오 다운로드**
+   * 인스타그램 등의 SNS 비디오 재생 시 조각난 range request URL들을 걸러내어, 소리(오디오)와 영상(비디오)이 온전히 결합된 고화질 **Progressive MP4** 스트림을 자동으로 추출하고 AI가 이를 스스로 인지하여 다운로드 폴더로 자동 저장합니다.
+
+6. **강력한 봇 탐지 우회 기능 (Stealth)**
+   * 크롬 브라우저 사용자 에이전트(User-Agent) 완벽 위장.
+   * 봇 검출 사이트가 검사하는 `navigator.permissions.query`, `navigator.webdriver` 특성들의 흔적 완벽 마스킹.
+   * 사람이 타이핑하는 속도와 키보드 입력 이벤(`keydown`, `keypress`, `input`, `keyup`)트를 정교하게 모사하여 차단 방지.
+
+7. **최적화된 반응 속도**
+   * 화면 비로딩 상황에서 불필요한 하드코딩 지연(Sleep)을 0.2초 수준으로 압축하고 루프 딜레이를 최적화하여 기존 대비 에이전트 작동 속도가 3배 향상되었습니다.
+
+---
+
+## 🚀 시작하기 (Getting Started)
+
+### 요구사항
+* [Node.js](https://nodejs.org/) (v18 이상 권장)
+* Git
+* Gemini API Key (또는 `agy` CLI 바이너리 설정)
+
+### 설치 방법
+1. 저장소를 클론합니다:
+   ```bash
+   git clone https://github.com/kbyms104/aibrowser.git
+   cd aibrowser
+   ```
+
+2. 패키지 의존성을 설치합니다:
+   ```bash
+   npm install
+   ```
+
+3. 환경 변수 파일 생성 및 API 키 설정:
+   * `.env.example` 파일을 복사하여 `.env` 파일을 생성합니다.
+   * 복사한 `.env` 파일에 발급받으신 `GEMINI_API_KEY`를 설정합니다.
+
+### 실행 방법
+애플리케이션을 구동합니다:
+```bash
+npm start
+```
+
+---
+
+## 🛠️ 설정 및 API 연동
+
+### 1. `agy` CLI 설정 (기본 프리셋)
+* 로컬 터미널에서 작동하는 에이전트 CLI(`agy`)와 동일한 흐름으로 브라우저 제어 명령을 동작시킵니다. 
+* 환경 변수에 저장된 API 키를 읽어 바로 사용합니다.
+
+### 2. 다이렉트 Cloud API 호출 (초고속 API 프리셋)
+* 사이드바 우측 설정 버튼을 눌러 **Google Gemini API (Direct HTTP - Ultra Fast)**를 선택할 수 있습니다.
+* 이 모드에서는 OS 프로세스 생성 오버헤드가 없어 가장 가볍고 빠르게 동작하며, **Gemini 3.5 Flash**를 기반으로 딥러닝 딥서치가 가동됩니다.
+
+---
+
+## 📄 라이선스 (License)
+이 프로젝트는 MIT 라이선스에 따라 라이선스가 부여됩니다. 자세한 내용은 `LICENSE`를 참고하세요.
