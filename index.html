@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AetherBrowser - AI Desktop Browser</title>
+  
+  <!-- Modern Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Ambient background glow objects -->
+  <div class="bg-glow bg-glow-purple"></div>
+  <div class="bg-glow bg-glow-blue"></div>
+
+  <div class="app-container">
+    
+    <!-- Main Workspace Grid -->
+    <main class="workspace-grid">
+      
+      <!-- Left Panel: The Browser (Tabs + Navigation + WebViews) -->
+      <section class="panel browser-panel glass-card">
+        
+        <!-- Browser Tab Bar (Chrome/Brave style) -->
+        <div class="browser-tabs-bar">
+          <div class="tabs-list" id="tabs-list">
+            <!-- Dynamic tabs are injected here -->
+          </div>
+          <button id="add-tab-btn" class="add-tab-btn" title="새 탭">
+            <i class="fa-solid fa-plus"></i>
+          </button>
+        </div>
+
+        <!-- Browser Navigation Bar -->
+        <div class="browser-header">
+          <div class="browser-nav">
+            <button class="nav-arrow" id="browser-back" title="뒤로 가기" disabled>
+              <i class="fa-solid fa-arrow-left"></i>
+            </button>
+            <button class="nav-arrow" id="browser-forward" title="앞으로 가기" disabled>
+              <i class="fa-solid fa-arrow-right"></i>
+            </button>
+            <button class="nav-arrow" id="browser-refresh" title="새로고침">
+              <i class="fa-solid fa-rotate-right"></i>
+            </button>
+          </div>
+          
+          <div class="browser-address">
+            <i class="fa-solid fa-lock"></i>
+            <input type="text" id="browser-address-bar" value="https://www.google.com">
+          </div>
+          
+          <div class="browser-actions" style="display: flex; gap: 8px;">
+            <button id="clear-cache-btn" class="icon-btn" title="브라우저 캐시/쿠키 초기화 및 로그아웃">
+              <i class="fa-solid fa-broom"></i>
+            </button>
+            <button id="media-download-btn" class="icon-btn" title="감지된 동영상 다운로드" style="position: relative; display: none;">
+              <i class="fa-solid fa-download" style="color: var(--accent-cyan);"></i>
+              <span id="media-count-badge" style="position: absolute; top: -4px; right: -4px; background: var(--color-danger); color: white; border-radius: 50%; width: 14px; height: 14px; font-size: 8px; display: flex; align-items: center; justify-content: center; font-weight: 800;">0</span>
+            </button>
+            <button id="toggle-sidebar-btn" class="icon-btn active" title="AI 사이드바 토글">
+              <i class="fa-solid fa-robot"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Webview container -->
+        <div class="webview-container" id="webview-container" style="position: relative;">
+          <!-- Real Chromium webview tags are dynamically injected here -->
+          
+          <!-- WebView Loading indicator -->
+          <div class="webview-loader" id="webview-loader">
+            <div class="loader-line"></div>
+          </div>
+
+          <!-- Video Downloader Dropdown -->
+          <div id="media-dropdown" class="media-dropdown collapsed">
+            <div class="media-dropdown-header">
+              <span><i class="fa-solid fa-video"></i> 감지된 동영상 리스트</span>
+              <button id="close-media-dropdown" class="icon-btn-small"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div id="media-list-container" class="media-list-container">
+              <!-- Dynamically populated video items -->
+            </div>
+          </div>
+        </div>
+        
+      </section>
+
+      <!-- Right Panel: AI Sidebar Panel -->
+      <section class="panel sidebar-panel" id="ai-sidebar">
+        
+        <!-- Configuration settings (collapsible) -->
+        <div class="glass-card config-card" id="config-panel">
+          <div class="card-header flex-header">
+            <h3><i class="fa-solid fa-terminal"></i> AI CLI Settings</h3>
+            <button id="toggle-config-btn" class="icon-btn-sm" title="설정 닫기">
+              <i class="fa-solid fa-chevron-up"></i>
+            </button>
+          </div>
+          <div class="card-body">
+            <div class="input-group">
+              <label for="cli-presets">CLI Presets</label>
+              <select id="cli-presets" class="preset-select">
+                <option value="gemini-api">Google Gemini API (Direct HTTP - Ultra Fast)</option>
+                <option value="openai-api">OpenAI ChatGPT API (Direct HTTP - Ultra Fast)</option>
+                <option value="claude-api">Anthropic Claude API (Direct HTTP - Ultra Fast)</option>
+                <option value="ollama run llama3">Ollama (Llama 3 CLI)</option>
+                <option value="http://localhost:11434/v1/chat/completions?model=llama3">Ollama Local HTTP API (High Speed)</option>
+                <option value="agy" selected>Agy (Gemini CLI)</option>
+                <option value="claude-cli -f $FILE">Claude CLI</option>
+                <option value="chatgpt-cli --prompt $PROMPT">ChatGPT CLI</option>
+                <option value="custom">Custom Command / API Url...</option>
+              </select>
+            </div>
+            
+            <div class="input-group" id="api-key-group" style="display: none; margin-top: 8px;">
+              <label for="api-key-input" id="api-key-label">Gemini API Key</label>
+              <input type="password" id="api-key-input" placeholder="API Key 입력 (비어있으면 PC 환경변수 사용)">
+            </div>
+            
+            <div class="input-group">
+              <label for="cli-command-input">Command Template / API URL</label>
+              <input type="text" id="cli-command-input" value="agy" placeholder="예: gemini-api, ollama run llama3 등">
+              <p class="input-hint">
+                <strong>[Direct API]</strong> <code>gemini-api</code>, <code>openai-api</code> 등 (프로세스 로딩 없는 초고속 모드)<br>
+                <strong>[CLI]</strong> <code>$PROMPT</code>: 인자 | <code>$FILE</code>: 임시 파일 | 비어있으면 stdin<br>
+                <strong>[HTTP]</strong> <code>http://...</code> 로 시작하는 API 주소
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Automation Controller -->
+        <div class="glass-card">
+          <div class="card-header flex-header">
+            <h3><i class="fa-solid fa-wand-magic-sparkles"></i> AI Agent Automation</h3>
+            <button id="show-config-btn" class="icon-btn-sm" title="설정 열기">
+              <i class="fa-solid fa-sliders"></i>
+            </button>
+          </div>
+          <div class="card-body">
+            <div class="input-group">
+              <label for="goal-input">목표를 작성해 주세요</label>
+              <textarea id="goal-input" rows="3" placeholder="예: wikipedia.org로 이동한 다음 'Artificial Intelligence'를 검색하고 첫 번째 문단 요약해줘."></textarea>
+            </div>
+            
+            <div class="button-group">
+              <button id="run-btn" class="btn btn-primary">
+                <i class="fa-solid fa-play"></i> AI 자동화 시작
+              </button>
+              <button id="stop-btn" class="btn btn-danger" disabled>
+                <i class="fa-solid fa-stop"></i> 중지
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Timeline Log panel -->
+        <div class="glass-card fill-remaining">
+          <div class="card-header flex-header">
+            <h3><i class="fa-solid fa-list-check"></i> Timeline Logs</h3>
+            <button id="clear-logs-btn" class="text-btn">Clear Logs</button>
+          </div>
+          <div class="card-body log-container" id="timeline-logs">
+            <div class="empty-state">
+              <i class="fa-solid fa-terminal"></i>
+              <p>목표를 실행하면 AI 에이전트의 작업 단계가 여기에 표시됩니다.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Extracted Data panel -->
+        <div class="glass-card result-panel">
+          <div class="card-header">
+            <h3><i class="fa-solid fa-file-invoice"></i> Extracted Result</h3>
+          </div>
+          <div class="card-body result-body" id="extracted-result">
+            <div class="empty-state">
+              <i class="fa-solid fa-file-circle-check"></i>
+              <p>에이전트가 요약하거나 수집한 데이터가 여기에 출력됩니다.</p>
+            </div>
+          </div>
+        </div>
+
+      </section>
+
+    </main>
+  </div>
+
+  <script src="renderer.js" type="module"></script>
+</body>
+</html>
