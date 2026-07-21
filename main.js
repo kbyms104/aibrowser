@@ -89,6 +89,16 @@ app.whenReady().then(() => {
   const cleanUserAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36';
   session.defaultSession.setUserAgent(cleanUserAgent);
 
+  // Handle window.open and target="_blank" from webviews by sending an event to the renderer to create a tab
+  app.on('web-contents-created', (event, contents) => {
+    contents.setWindowOpenHandler((details) => {
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.webContents.send('open-tab-request', details.url);
+      }
+      return { action: 'deny' };
+    });
+  });
+
   // Register Electron IPC handlers
   
   // 1. IPC Handler: Capture Webview page screenshot

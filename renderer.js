@@ -960,6 +960,12 @@ window.electronAPI.onVideoDetected((data) => {
   }
 });
 
+// Register IPC listener to open a new tab when a guest webview requests window.open
+window.electronAPI.onOpenTabRequest((url) => {
+  addLogItem('INFO', `새 창 감지: 새 탭에서 페이지를 엽니다: ${url}`);
+  createTab(url);
+});
+
 // Clear Cache Button Event Listener
 const btnClearCache = document.getElementById('clear-cache-btn');
 if (btnClearCache) {

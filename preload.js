@@ -10,5 +10,6 @@ contextBridge.exposeInMainWorld('electronAPI', {
   abortAgentExecution: () => ipcRenderer.invoke('abort-agent-execution'),
   getGuestPreloadPath: () => ipcRenderer.invoke('get-guest-preload-path'),
   clearCache: () => ipcRenderer.invoke('clear-cache'),
-  onVideoDetected: (callback) => ipcRenderer.on('video-detected', (event, data) => callback(data))
+  onVideoDetected: (callback) => ipcRenderer.on('video-detected', (event, data) => callback(data)),
+  onOpenTabRequest: (callback) => ipcRenderer.on('open-tab-request', (event, url) => callback(url))
 });
