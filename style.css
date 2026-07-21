@@ -889,3 +889,109 @@ textarea {
   background: linear-gradient(135deg, #00e676, #00b0ff);
   color: #06060c;
 }
+
+/* Self-Healing Overlay Styles */
+#self-healing-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(6, 6, 12, 0.95);
+  backdrop-filter: blur(20px);
+  z-index: 999999;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-main);
+  font-family: var(--font-primary);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.4s ease;
+}
+
+#self-healing-overlay.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.self-healing-box {
+  background: rgba(255, 23, 68, 0.05);
+  border: 1px solid rgba(255, 23, 68, 0.25);
+  border-radius: 16px;
+  padding: 3rem 4rem;
+  max-width: 600px;
+  text-align: center;
+  box-shadow: 0 0 50px rgba(255, 23, 68, 0.15), inset 0 0 20px rgba(255, 23, 68, 0.05);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.self-healing-icon {
+  font-size: 4rem;
+  color: var(--color-danger);
+  animation: pulse-glow 1.5s infinite alternate;
+}
+
+.self-healing-title {
+  font-size: 1.8rem;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  background: linear-gradient(135deg, #ff1744, #ff5252);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.self-healing-subtitle {
+  font-size: 0.95rem;
+  color: var(--text-muted);
+  line-height: 1.6;
+}
+
+.self-healing-preset {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--accent-cyan);
+  background: rgba(0, 242, 254, 0.1);
+  padding: 4px 12px;
+  border-radius: 20px;
+  border: 1px solid rgba(0, 242, 254, 0.2);
+}
+
+.self-healing-status {
+  margin-top: 1rem;
+  font-size: 0.9rem;
+  color: var(--text-main);
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.self-healing-loader {
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--accent-cyan);
+  border-bottom-color: transparent;
+  border-radius: 50%;
+  animation: self-heal-spin 1s linear infinite;
+}
+
+@keyframes pulse-glow {
+  from {
+    transform: scale(0.95);
+    text-shadow: 0 0 10px rgba(255, 23, 68, 0.5);
+  }
+  to {
+    transform: scale(1.05);
+    text-shadow: 0 0 30px rgba(255, 23, 68, 0.9);
+  }
+}
+
+@keyframes self-heal-spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}

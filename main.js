@@ -491,6 +491,44 @@ app.whenReady().then(() => {
     }
   });
 
+  // 9. IPC Handler: Read local source file safely (Self-Healing helper)
+  ipcMain.handle('read-source-file', async (event, filename) => {
+    try {
+      const safePath = path.resolve(__dirname, path.basename(filename));
+      if (!fs.existsSync(safePath)) {
+        throw new Error(`File does not exist: ${safePath}`);
+      }
+      return fs.readFileSync(safePath, 'utf8');
+    } catch (err) {
+      console.error('Failed to read source file:', err);
+      throw err;
+    }
+  });
+
+  // 10. IPC Handler: Write local source file safely (Self-Healing helper)
+  ipcMain.handle('write-source-file', async (event, { filename, content }) => {
+    try {
+      const safePath = path.resolve(__dirname, path.basename(filename));
+      const backupPath = `${safePath}.bak`;
+      if (fs.existsSync(safePath)) {
+        fs.copyFileSync(safePath, backupPath);
+      }
+      fs.writeFileSync(safePath, content, 'utf8');
+      console.log(`[Self-Heal] Successfully wrote patch to: ${safePath}. Backup created at: ${backupPath}`);
+      return true;
+    } catch (err) {
+      console.error('Failed to write source file:', err);
+      throw err;
+    }
+  });
+
+  // 11. IPC Handler: Relaunch application
+  ipcMain.handle('relaunch-app', () => {
+    console.log('[Self-Heal] Relaunching application to apply patches...');
+    app.relaunch();
+    app.exit(0);
+  });
+
   createWindow();
 
   app.on('activate', () => {
@@ -507,4 +545,25 @@ app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
     app.quit();
   }
+});
+
+// Global exception handlers for the Main Process to prevent silent hanging
+process.on('uncaughtException', (err) => {
+  console.error('[CRITICAL MAIN ERROR] Uncaught Exception:', err);
+  try {
+    const logPath = path.join(__dirname, 'agent_run.log');
+    fs.appendFileSync(logPath, `[${new Date().toISOString()}] [CRITICAL MAIN ERROR] ${err.stack || err.message || err}\n`, 'utf8');
+  } catch (e) {}
+  
+  // Relaunch the app to attempt recovery
+  app.relaunch();
+  app.exit(1);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('[CRITICAL MAIN ERROR] Unhandled Rejection:', reason);
+  try {
+    const logPath = path.join(__dirname, 'agent_run.log');
+    fs.appendFileSync(logPath, `[${new Date().toISOString()}] [CRITICAL MAIN ERROR] Unhandled Rejection: ${reason.stack || reason.message || reason}\n`, 'utf8');
+  } catch (e) {}
 });

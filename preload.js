@@ -12,5 +12,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
   clearCache: () => ipcRenderer.invoke('clear-cache'),
   onVideoDetected: (callback) => ipcRenderer.on('video-detected', (event, data) => callback(data)),
   onOpenTabRequest: (callback) => ipcRenderer.on('open-tab-request', (event, url) => callback(url)),
-  writeLog: (message) => ipcRenderer.invoke('write-log', message)
+  writeLog: (message) => ipcRenderer.invoke('write-log', message),
+  readSourceFile: (filename) => ipcRenderer.invoke('read-source-file', filename),
+  writeSourceFile: (filename, content) => ipcRenderer.invoke('write-source-file', { filename, content }),
+  relaunchApp: () => ipcRenderer.invoke('relaunch-app')
 });

@@ -1009,3 +1009,145 @@ if (btnClearCache) {
     }
   });
 }
+
+// ==========================================
+// 5. Self-Healing (Self-Patching) System
+// ==========================================
+let isHealingInProgress = false;
+
+// Global Error & Promise Rejection Interceptors for the Renderer Process
+window.addEventListener('error', (event) => {
+  // Ignore harmless webview console errors or cross-origin script warnings
+  if (!event.error || (event.message && event.message.includes('Script error'))) return;
+  handleRendererCrash(event.error);
+});
+
+window.addEventListener('unhandledrejection', (event) => {
+  if (!event.reason) return;
+  handleRendererCrash(event.reason);
+});
+
+// Test Crash Button Event Listener (Generates intentional crash for verification)
+const btnTestCrash = document.getElementById('test-crash-btn');
+if (btnTestCrash) {
+  btnTestCrash.addEventListener('click', () => {
+    addLogItem('INFO', '자가 치유 기능 검증을 위해 의도적 오류를 발생시킵니다.');
+    // Trigger intentional error: call undefined function
+    window.triggerSelfHealingCrashTest();
+  });
+}
+
+async function handleRendererCrash(error) {
+  if (isHealingInProgress) return;
+  isHealingInProgress = true;
+  
+  console.error('[Self-Healing] Intercepted crash in Renderer Process:', error);
+  
+  const overlay = document.getElementById('self-healing-overlay');
+  const presetLabel = document.getElementById('self-healing-preset');
+  const statusLabel = document.getElementById('self-healing-status-text');
+  
+  if (overlay) overlay.classList.add('active');
+  
+  const presetSelect = document.getElementById('cli-presets');
+  const commandInput = document.getElementById('cli-command-input');
+  
+  const currentPreset = presetSelect ? presetSelect.value : 'agy';
+  const currentCommand = commandInput ? commandInput.value : 'agy';
+  
+  if (presetLabel) {
+    presetLabel.textContent = `Active AI Preset: ${currentPreset}`;
+  }
+  
+  try {
+    if (statusLabel) statusLabel.textContent = "에러 위치 및 콜스택 분석 중...";
+    const errorStack = error ? (error.stack || error.message || String(error)) : 'Unknown Error';
+    
+    // Parse stack trace to identify target file (e.g. renderer.js, agent.js)
+    let targetFilename = 'renderer.js';
+    const match = errorStack.match(/(renderer\.js|agent\.js|preload\.js)/);
+    if (match) {
+      targetFilename = match[1];
+    }
+    
+    if (statusLabel) statusLabel.textContent = `로컬 소스코드 (${targetFilename}) 읽어오는 중...`;
+    const sourceCode = await window.electronAPI.readSourceFile(targetFilename);
+    
+    if (statusLabel) statusLabel.textContent = "AI에게 자가 치유 패치 제작 요청 중 (잠시 대기)...";
+    
+    const selfHealPrompt = `You are a Self-Healing Code Assistant. A runtime error occurred in this application.
+Your job is to fix the bug in the provided source code to resolve the error.
+
+[ERROR STACK TRACE]
+${errorStack}
+
+[SOURCE FILE NAME]
+${targetFilename}
+
+[SOURCE CODE]
+\`\`\`javascript
+${sourceCode}
+\`\`\`
+
+Analyze the stack trace and the code. Locate the line/function throwing the error, fix it, and return the ENTIRE corrected source code of the file.
+Your response MUST be ONLY the corrected code inside a javascript code block: \`\`\`javascript ... \`\`\`. Do not include any conversational introduction or explanation. Do not output anything before or after the code block.`;
+
+    let responseText = '';
+    // Call the active preset using the exact same APIs that the agent uses!
+    if (['gemini-api', 'openai-api', 'claude-api'].includes(currentPreset)) {
+      const provider = currentPreset.replace('-api', '');
+      const apiKey = window.localStorage.getItem(`${provider}-api-key`) || '';
+      responseText = await window.electronAPI.runDirectApi({
+        provider,
+        prompt: selfHealPrompt,
+        apiKey
+      });
+    } else if (currentCommand.startsWith('http://') || currentCommand.startsWith('https://')) {
+      const urlObj = new URL(currentCommand);
+      const model = urlObj.searchParams.get('model') || 'llama3';
+      urlObj.search = '';
+      const cleanUrl = urlObj.toString();
+      responseText = await window.electronAPI.runLocalHttp({
+        url: cleanUrl,
+        model,
+        prompt: selfHealPrompt
+      });
+    } else {
+      // CLI preset (like agy or custom command)
+      responseText = await window.electronAPI.runUniversalCli({
+        commandTemplate: currentCommand,
+        prompt: selfHealPrompt
+      });
+    }
+    
+    if (statusLabel) statusLabel.textContent = "AI 패치 추출 및 최종 검증 중...";
+    
+    // Extract code block from responseText
+    let correctedCode = responseText.trim();
+    const codeBlockMatch = correctedCode.match(/```javascript([\s\S]*?)```/) || correctedCode.match(/```js([\s\S]*?)```/) || correctedCode.match(/```([\s\S]*?)```/);
+    if (codeBlockMatch) {
+      correctedCode = codeBlockMatch[1].trim();
+    }
+    
+    // Validate response code structure
+    if (!correctedCode || correctedCode.length < 50 || (!correctedCode.includes('function') && !correctedCode.includes('const') && !correctedCode.includes('let') && !correctedCode.includes('import'))) {
+      throw new Error("AI returned empty or invalid code patch.");
+    }
+    
+    if (statusLabel) statusLabel.textContent = "자가 치유 패치 디스크 적용 중...";
+    await window.electronAPI.writeSourceFile(targetFilename, correctedCode);
+    
+    if (statusLabel) statusLabel.textContent = "패치 적용 완료! 브라우저 재기동 중...";
+    await new Promise(r => setTimeout(r, 1500));
+    
+    // Relaunch the app
+    await window.electronAPI.relaunchApp();
+    
+  } catch (healErr) {
+    console.error('[Self-Healing] Failed to heal the code:', healErr);
+    if (statusLabel) {
+      statusLabel.innerHTML = `<span style="color: var(--color-danger);">자가 치유 실패: ${escapeHTML(healErr.message)}</span>`;
+    }
+    isHealingInProgress = false;
+  }
+}

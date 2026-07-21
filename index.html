@@ -20,6 +20,24 @@
   <div class="bg-glow bg-glow-purple"></div>
   <div class="bg-glow bg-glow-blue"></div>
 
+  <!-- Self-Healing Fullscreen Overlay -->
+  <div id="self-healing-overlay">
+    <div class="self-healing-box">
+      <div class="self-healing-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
+      <div class="self-healing-title">자가 치유(Self-Healing) 작동 중</div>
+      <div class="self-healing-subtitle">
+        AI 에이전트가 브라우저 내 치명적인 오류를 감지했습니다.<br>
+        현재 설정된 AI 모델을 활용해 소스코드를 스스로 패치하고 있습니다.<br>
+        완료되면 프로그램이 자동으로 재기동됩니다.
+      </div>
+      <div class="self-healing-preset" id="self-healing-preset">AI Preset: Loading...</div>
+      <div class="self-healing-status">
+        <div class="self-healing-loader"></div>
+        <span id="self-healing-status-text">에러 분석 시작 중...</span>
+      </div>
+    </div>
+  </div>
+
   <div class="app-container">
     
     <!-- Main Workspace Grid -->
@@ -58,6 +76,9 @@
           </div>
           
           <div class="browser-actions" style="display: flex; gap: 8px;">
+            <button id="test-crash-btn" class="icon-btn" title="자가 치유 기능 테스트 (치명적 오류 발생)" style="color: var(--color-danger);">
+              <i class="fa-solid fa-bomb"></i>
+            </button>
             <button id="clear-cache-btn" class="icon-btn" title="브라우저 캐시/쿠키 초기화 및 로그아웃">
               <i class="fa-solid fa-broom"></i>
             </button>
