@@ -168,15 +168,18 @@ app.whenReady().then(() => {
           const child = spawn(command, [], { shell: true });
           activeChildProcess = child;
           
+          child.stdout.setEncoding('utf8');
+          child.stderr.setEncoding('utf8');
+          
           let stdout = '';
           let stderr = '';
           
           child.stdout.on('data', (data) => {
-            stdout += data.toString();
+            stdout += data;
           });
           
           child.stderr.on('data', (data) => {
-            stderr += data.toString();
+            stderr += data;
           });
           
           child.on('close', (code) => {

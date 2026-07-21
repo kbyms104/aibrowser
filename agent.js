@@ -283,6 +283,16 @@ Information Retrieval & Deep Search Instructions (CRITICAL):
   3. Use the browser ONLY for the execution phase (e.g., navigating directly to Tistory, opening the post editor, typing the pre-generated report/content, and publishing it).
   4. Formulate the report contents in your mind, then proceed directly to the publication/execution page using GOTO.
 
+Content Writing & Formatting Guidelines (CRITICAL):
+- When generating blog posts, news articles, or reports, the content must NOT be short, dry, or generic.
+- You MUST write high-quality, professional, and detailed content suited for the specific platform (e.g., a rich, structured blog post for Tistory).
+- Always use a clean layout:
+  1. Use clear, engaging headings (e.g. [제목], [본문] structure or using subheadings).
+  2. Use well-structured paragraphs with professional and readable grammar in Korean.
+  3. Format data or bullet points clearly with professional emojis or numbered lists to increase readability.
+  4. Include a proper introduction, detailed core analysis sections, and a concluding summary.
+  5. The length should be substantial (at least 3-4 rich paragraphs with detailed analysis) rather than a brief outline.
+
 Rules:
 1. Only choose element IDs that are listed in the interactive elements list.
 2. If the page is loading or elements are missing, you can WAIT or reload.
