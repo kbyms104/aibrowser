@@ -614,7 +614,9 @@ btnRun.addEventListener('click', async () => {
       }
 
       // Wait a short moment for page animations or re-renders to settle using a cancellable delay
-      await cancellableDelay(500);
+      // If the action was CLICK or TYPE, wait longer (1500ms) to allow new-window/tab-switch events to fire
+      const delayMs = ['CLICK', 'TYPE'].includes(actionObj.action) ? 1500 : 500;
+      await cancellableDelay(delayMs);
       
       if (step >= maxSteps) {
         addLogItem('INFO', 'Reached maximum step limit (15). Stopping.');
