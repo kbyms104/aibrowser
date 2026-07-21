@@ -9,34 +9,57 @@ async function getInteractiveElements(webview) {
       let idCounter = 0;
 
       // Recursively remove old markings
-      function removeOldMarkings(doc) {
-        if (!doc) return;
-        const markings = doc.querySelectorAll('[data-agent-id]');
-        markings.forEach(el => el.removeAttribute('data-agent-id'));
-        const iframes = doc.querySelectorAll('iframe');
-        iframes.forEach(iframe => {
+      function removeOldMarkings(node) {
+        if (!node) return;
+        
+        if (node.removeAttribute) {
+          node.removeAttribute('data-agent-id');
+        }
+        
+        if (node.children) {
+          for (const child of node.children) {
+            removeOldMarkings(child);
+          }
+        }
+        
+        if (node.shadowRoot) {
+          removeOldMarkings(node.shadowRoot);
+        }
+        
+        if (node.tagName === 'IFRAME') {
           try {
-            const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+            const iframeDoc = node.contentDocument || node.contentWindow.document;
             removeOldMarkings(iframeDoc);
           } catch (e) {}
-        });
+        }
       }
 
       // Recursively find candidates
       const candidates = [];
-      function findCandidates(doc) {
-        if (!doc) return;
-        const found = doc.querySelectorAll(
-          'button, a, input, textarea, select, [role="button"], [role="link"], [contenteditable="true"]'
-        );
-        found.forEach(el => candidates.push(el));
-        const iframes = doc.querySelectorAll('iframe');
-        iframes.forEach(iframe => {
+      function findCandidates(node) {
+        if (!node) return;
+        
+        const interactiveSelectors = 'button, a, input, textarea, select, [role="button"], [role="link"], [contenteditable="true"]';
+        if (node.matches && node.matches(interactiveSelectors)) {
+          candidates.push(node);
+        }
+        
+        if (node.children) {
+          for (const child of node.children) {
+            findCandidates(child);
+          }
+        }
+        
+        if (node.shadowRoot) {
+          findCandidates(node.shadowRoot);
+        }
+        
+        if (node.tagName === 'IFRAME') {
           try {
-            const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+            const iframeDoc = node.contentDocument || node.contentWindow.document;
             findCandidates(iframeDoc);
           } catch (e) {}
-        });
+        }
       }
 
       removeOldMarkings(document);
@@ -485,20 +508,33 @@ export async function executeAgentAction(webview, actionObj, logCallback) {
       
       const success = await webview.executeJavaScript(`
         (function() {
-          function findElementById(doc, id) {
-            if (!doc) return null;
-            let el = doc.querySelector('[data-agent-id="' + id + '"]');
-            if (el) return el;
-            const iframes = doc.querySelectorAll('iframe');
-            for (const iframe of iframes) {
+          function findElementById(node, id) {
+            if (!node) return null;
+            
+            if (node.getAttribute && node.getAttribute('data-agent-id') === String(id)) {
+              return node;
+            }
+            
+            if (node.children) {
+              for (const child of node.children) {
+                const found = findElementById(child, id);
+                if (found) return found;
+              }
+            }
+            
+            if (node.shadowRoot) {
+              const found = findElementById(node.shadowRoot, id);
+              if (found) return found;
+            }
+            
+            if (node.tagName === 'IFRAME') {
               try {
-                const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
-                if (iframeDoc) {
-                  el = findElementById(iframeDoc, id);
-                  if (el) return el;
-                }
+                const iframeDoc = node.contentDocument || node.contentWindow.document;
+                const found = findElementById(iframeDoc, id);
+                if (found) return found;
               } catch (e) {}
             }
+            
             return null;
           }
 
@@ -522,20 +558,33 @@ export async function executeAgentAction(webview, actionObj, logCallback) {
       const jsonValue = JSON.stringify(value);
       const success = await webview.executeJavaScript(`
         (function() {
-          function findElementById(doc, id) {
-            if (!doc) return null;
-            let el = doc.querySelector('[data-agent-id="' + id + '"]');
-            if (el) return el;
-            const iframes = doc.querySelectorAll('iframe');
-            for (const iframe of iframes) {
+          function findElementById(node, id) {
+            if (!node) return null;
+            
+            if (node.getAttribute && node.getAttribute('data-agent-id') === String(id)) {
+              return node;
+            }
+            
+            if (node.children) {
+              for (const child of node.children) {
+                const found = findElementById(child, id);
+                if (found) return found;
+              }
+            }
+            
+            if (node.shadowRoot) {
+              const found = findElementById(node.shadowRoot, id);
+              if (found) return found;
+            }
+            
+            if (node.tagName === 'IFRAME') {
               try {
-                const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
-                if (iframeDoc) {
-                  el = findElementById(iframeDoc, id);
-                  if (el) return el;
-                }
+                const iframeDoc = node.contentDocument || node.contentWindow.document;
+                const found = findElementById(iframeDoc, id);
+                if (found) return found;
               } catch (e) {}
             }
+            
             return null;
           }
 

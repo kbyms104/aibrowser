@@ -59,6 +59,10 @@ async function initPreloadPath() {
 function createTab(url = 'https://www.google.com') {
   const tabId = tabIdCounter++;
   
+  // Read state of the isolated session checkbox
+  const sessionToggle = document.getElementById('session-partition-toggle');
+  const isIsolated = sessionToggle ? sessionToggle.checked : false;
+  
   // Create webview element
   const webviewEl = document.createElement('webview');
   webviewEl.id = `webview-${tabId}`;
@@ -68,6 +72,13 @@ function createTab(url = 'https://www.google.com') {
   if (guestPreloadPath) {
     webviewEl.setAttribute('preload', guestPreloadPath);
   }
+  
+  // If isolated session toggle is checked, set isolated persistent partition
+  if (isIsolated) {
+    webviewEl.setAttribute('partition', `persist:session-tab-${tabId}`);
+    addLogItem('INFO', `새 탭 [ID ${tabId}] 에 독립된 쿠키/캐시 세션을 활성화했습니다.`);
+  }
+
   webviewEl.src = url;
   webviewEl.style.display = 'none';
   webviewEl.style.flex = '1';
@@ -78,9 +89,10 @@ function createTab(url = 'https://www.google.com') {
 
   // Create tab UI element
   const tabEl = document.createElement('div');
-  tabEl.className = 'browser-tab';
+  tabEl.className = `browser-tab ${isIsolated ? 'isolated-session' : ''}`;
   tabEl.id = `tab-${tabId}`;
   tabEl.innerHTML = `
+    ${isIsolated ? '<i class="fa-solid fa-user-shield" style="color: var(--accent-cyan); font-size: 0.75rem; margin-right: 6px;" title="독립 계정 세션"></i>' : ''}
     <span class="tab-title">Loading...</span>
     <span class="close-tab-btn" title="탭 닫기">
       <i class="fa-solid fa-xmark"></i>
@@ -188,6 +200,7 @@ function createTab(url = 'https://www.google.com') {
     id: tabId,
     webview: webviewEl,
     tabEl: tabEl,
+    isIsolated: isIsolated,
     detectedVideos: []
   };
 
