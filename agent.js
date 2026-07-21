@@ -307,9 +307,13 @@ export async function runAgentStep({ commandTemplate, goal, history, webview, de
   logCallback(`Detected ${elements.length} interactive elements on page.`);
   
   console.log(`[AGENT DEBUG] URL: ${url} | Detected ${elements.length} elements.`);
+  window.electronAPI.writeLog(`[AGENT DEBUG] URL: ${url} | Detected ${elements.length} elements.`).catch(e => {});
   elements.forEach(el => {
-    if (['input', 'textarea', 'select'].includes(el.tagName) || el.placeholder || el.text.includes('쓰기') || el.text.includes('글') || el.text.includes('완료') || el.text.includes('등록')) {
-      console.log(`  -> [ID ${el.id}] <${el.tagName}> text="${el.text}" placeholder="${el.placeholder}" name="${el.name}"`);
+    const isSpecial = ['input', 'textarea', 'select'].includes(el.tagName) || el.placeholder || el.text.includes('쓰기') || el.text.includes('글') || el.text.includes('완료') || el.text.includes('등록');
+    if (isSpecial) {
+      const elMsg = `  -> [ID ${el.id}] <${el.tagName}> text="${el.text}" placeholder="${el.placeholder}" name="${el.name}"`;
+      console.log(elMsg);
+      window.electronAPI.writeLog(elMsg).catch(e => {});
     }
   });
 

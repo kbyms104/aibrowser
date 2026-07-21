@@ -378,6 +378,9 @@ addressBar.addEventListener('keydown', (e) => {
 
 // 4. Log Management
 function addLogItem(type, message, thought = null) {
+  const logLine = `[${type}] ${message}${thought ? ` (Thought: ${thought})` : ''}`;
+  window.electronAPI.writeLog(logLine).catch(e => {});
+
   const empty = timelineLogs.querySelector('.empty-state');
   if (empty) empty.remove();
 
@@ -408,6 +411,9 @@ function addLogItem(type, message, thought = null) {
 }
 
 function addActionLog(step, actionObj) {
+  const logLine = `[ACTION STEP ${step}] ${actionObj.action} | description: "${actionObj.description}"${actionObj.value ? ` | value: "${actionObj.value}"` : ''}${actionObj.thought ? ` | thought: "${actionObj.thought}"` : ''}`;
+  window.electronAPI.writeLog(logLine).catch(e => {});
+
   const empty = timelineLogs.querySelector('.empty-state');
   if (empty) empty.remove();
 

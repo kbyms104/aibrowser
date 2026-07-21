@@ -476,6 +476,18 @@ app.whenReady().then(() => {
     }
   });
 
+  // 8. IPC Handler: Append message to persistent log file
+  ipcMain.handle('write-log', async (event, message) => {
+    try {
+      const logPath = path.join(__dirname, 'agent_run.log');
+      fs.appendFileSync(logPath, `[${new Date().toISOString()}] ${message}\n`, 'utf8');
+      return true;
+    } catch (err) {
+      console.error('Failed to append log:', err);
+      return false;
+    }
+  });
+
   createWindow();
 
   app.on('activate', () => {
