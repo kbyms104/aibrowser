@@ -1076,7 +1076,7 @@ async function handleRendererCrash(error) {
     if (statusLabel) statusLabel.textContent = "AI에게 자가 치유 패치 제작 요청 중 (잠시 대기)...";
     
     const selfHealPrompt = `You are a Self-Healing Code Assistant. A runtime error occurred in this application.
-Your job is to fix the bug in the provided source code to resolve the error.
+Your job is to write a search-and-replace patch in JSON format to fix the bug in the provided source code.
 
 [ERROR STACK TRACE]
 ${errorStack}
@@ -1089,8 +1089,13 @@ ${targetFilename}
 ${sourceCode}
 \`\`\`
 
-Analyze the stack trace and the code. Locate the line/function throwing the error, fix it, and return the ENTIRE corrected source code of the file.
-Your response MUST be ONLY the corrected code inside a javascript code block: \`\`\`javascript ... \`\`\`. Do not include any conversational introduction or explanation. Do not output anything before or after the code block.`;
+Analyze the stack trace and the code. Locate the bug, and write a JSON search-and-replace patch.
+You MUST return a single valid JSON block containing:
+{
+  "target": "The exact contiguous block of code from the file that contains the bug, including proper indentation and surrounding lines for context.",
+  "replacement": "The corrected block of code that should replace the target block."
+}
+Your output MUST be ONLY the JSON block inside a json code block: \`\`\`json ... \`\`\`. Do not include any conversational explanation or text outside the code block.`;
 
     let responseText = '';
     // Call the active preset using the exact same APIs that the agent uses!
@@ -1122,17 +1127,43 @@ Your response MUST be ONLY the corrected code inside a javascript code block: \`
     
     if (statusLabel) statusLabel.textContent = "AI 패치 추출 및 최종 검증 중...";
     
-    // Extract code block from responseText
-    let correctedCode = responseText.trim();
-    const codeBlockMatch = correctedCode.match(/```javascript([\s\S]*?)```/) || correctedCode.match(/```js([\s\S]*?)```/) || correctedCode.match(/```([\s\S]*?)```/);
-    if (codeBlockMatch) {
-      correctedCode = codeBlockMatch[1].trim();
+    // Extract JSON block from responseText
+    let jsonText = responseText.trim();
+    const jsonBlockMatch = jsonText.match(/```json([\s\S]*?)```/) || jsonText.match(/```([\s\S]*?)```/);
+    if (jsonBlockMatch) {
+      jsonText = jsonBlockMatch[1].trim();
     }
     
-    // Validate response code structure
-    if (!correctedCode || correctedCode.length < 50 || (!correctedCode.includes('function') && !correctedCode.includes('const') && !correctedCode.includes('let') && !correctedCode.includes('import'))) {
-      throw new Error("AI returned empty or invalid code patch.");
+    let patchObj;
+    try {
+      patchObj = JSON.parse(jsonText);
+    } catch (e) {
+      // Direct parse fallback
+      const matchRawJson = jsonText.match(/\{[\s\S]*\}/);
+      if (matchRawJson) {
+        patchObj = JSON.parse(matchRawJson[0]);
+      } else {
+        throw new Error("AI response could not be parsed as JSON: " + e.message);
+      }
     }
+    
+    const targetBlock = patchObj.target;
+    const replacementBlock = patchObj.replacement;
+    
+    if (!targetBlock || !replacementBlock) {
+      throw new Error("AI patch is missing 'target' or 'replacement' fields.");
+    }
+    
+    // Clean target/replacement carriage returns for stable matching
+    const normalizedSource = sourceCode.replace(/\r\n/g, '\n');
+    const normalizedTarget = targetBlock.replace(/\r\n/g, '\n');
+    const normalizedReplacement = replacementBlock.replace(/\r\n/g, '\n');
+    
+    if (!normalizedSource.includes(normalizedTarget)) {
+      throw new Error("AI patch target block could not be found in the original source code.");
+    }
+    
+    const correctedCode = normalizedSource.replace(normalizedTarget, normalizedReplacement);
     
     if (statusLabel) statusLabel.textContent = "자가 치유 패치 디스크 적용 중...";
     await window.electronAPI.writeSourceFile(targetFilename, correctedCode);
