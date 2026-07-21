@@ -304,6 +304,15 @@ export async function runAgentStep({ commandTemplate, goal, history, webview, de
 
   // 1. Get interactive elements
   const elements = await getInteractiveElements(webview);
+  logCallback(`Detected ${elements.length} interactive elements on page.`);
+  
+  console.log(`[AGENT DEBUG] URL: ${url} | Detected ${elements.length} elements.`);
+  elements.forEach(el => {
+    if (['input', 'textarea', 'select'].includes(el.tagName) || el.placeholder || el.text.includes('쓰기') || el.text.includes('글') || el.text.includes('완료') || el.text.includes('등록')) {
+      console.log(`  -> [ID ${el.id}] <${el.tagName}> text="${el.text}" placeholder="${el.placeholder}" name="${el.name}"`);
+    }
+  });
+
   const formattedElements = formatElements(elements);
 
   // 1b. Check progressive video URL
