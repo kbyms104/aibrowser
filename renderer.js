@@ -110,6 +110,21 @@ function createTab(url = 'https://www.google.com') {
     }
   });
 
+  // Handle javascript dialogs (alert, confirm, prompt) to prevent hanging
+  webviewEl.addEventListener('dialog', (e) => {
+    e.preventDefault();
+    const message = e.messageText;
+    
+    // Cancel Tistory draft recovery popups
+    if (message.includes('작성하던 글') || message.includes('이어서') || message.includes('임시저장')) {
+      addLogItem('INFO', `[경고창 자동 제어] 임시 저장 글 불러오기 취소: "${message}"`);
+      e.dialog.cancel();
+    } else {
+      addLogItem('INFO', `[경고창 자동 승인] 확인 클릭: "${message}"`);
+      e.dialog.ok();
+    }
+  });
+
   webviewEl.addEventListener('did-start-loading', () => {
     if (tabId === activeTabId) {
       webviewLoader.classList.add('loading');
