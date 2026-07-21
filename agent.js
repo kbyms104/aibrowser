@@ -509,7 +509,7 @@ export async function executeAgentAction(webview, actionObj, logCallback) {
       if (value === null || value === undefined) throw new Error("TYPE action requires a text value.");
       logCallback(`Typing "${value}" into element id: ${elementId}`);
 
-      const escapedValue = value.replace(/"/g, '\\"');
+      const jsonValue = JSON.stringify(value);
       const success = await webview.executeJavaScript(`
         (function() {
           function findElementById(doc, id) {
@@ -542,7 +542,7 @@ export async function executeAgentAction(webview, actionObj, logCallback) {
             }
 
             // Type values with human-like key event dispatching
-            const text = "${escapedValue}";
+            const text = ${jsonValue};
             for(let i=0; i<text.length; i++) {
               const char = text[i];
               const keyCode = char.charCodeAt(0);
