@@ -16,5 +16,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   readSourceFile: (filename) => ipcRenderer.invoke('read-source-file', filename),
   writeSourceFile: (filename, content) => ipcRenderer.invoke('write-source-file', { filename, content }),
   relaunchApp: () => ipcRenderer.invoke('relaunch-app'),
-  launchStealthChrome: () => ipcRenderer.invoke('launch-stealth-chrome')
+  launchStealthChrome: () => ipcRenderer.invoke('launch-stealth-chrome'),
+  evalRealChrome: (params) => ipcRenderer.invoke('eval-real-chrome', params),
+  getRealChromeState: () => ipcRenderer.invoke('get-real-chrome-state')
 });

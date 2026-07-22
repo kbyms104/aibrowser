@@ -554,13 +554,23 @@ btnRun.addEventListener('click', async () => {
     return;
   }
 
-  // Get active tab webview
-  const activeTab = tabs.find(t => t.id === activeTabId);
-  if (!activeTab) {
-    alert("No active web tab found.");
-    return;
+  // Check if Real Chrome 150 (Port 9222) CDP is active
+  const realChromeState = await window.electronAPI.getRealChromeState();
+  const isRealChrome = realChromeState.active;
+
+  let currentWebview = null;
+  let currentActiveTab = null;
+
+  if (!isRealChrome) {
+    currentActiveTab = tabs.find(t => t.id === activeTabId);
+    if (!currentActiveTab) {
+      alert("No active web tab found.");
+      return;
+    }
+    currentWebview = currentActiveTab.webview;
+  } else {
+    addLogItem('INFO', `[Real Chrome 150 CDP Active] Target Page: "${realChromeState.title}" (${realChromeState.url})`);
   }
-  const webview = activeTab.webview;
 
   // Initialize status depending on whether we are resuming or starting fresh
   if (isAgentPaused) {
@@ -571,7 +581,7 @@ btnRun.addEventListener('click', async () => {
     extractedResult.innerHTML = '';
     history = [];
     step = 0;
-    addLogItem('INFO', `Starting AI task: "${goal}"`);
+    addLogItem('INFO', `Starting AI task: "${goal}" [Target: ${isRealChrome ? 'Real Chrome 150 (External)' : 'AetherBrowser WebView'}]`);
     addLogItem('INFO', `Connecting via CLI: "${commandTemplate}"`);
   }
 
@@ -583,20 +593,17 @@ btnRun.addEventListener('click', async () => {
       step++;
       addLogItem('INFO', `Executing Step ${step} of ${maxSteps}...`);
       
-      // Get the currently active webview dynamically in each step to support cross-tab tasks
-      const currentActiveTab = tabs.find(t => t.id === activeTabId);
-      if (!currentActiveTab) {
-        throw new Error("No active tab found.");
+      if (!isRealChrome) {
+        currentActiveTab = tabs.find(t => t.id === activeTabId);
+        if (!currentActiveTab) {
+          throw new Error("No active tab found.");
+        }
+        currentWebview = currentActiveTab.webview;
+        await waitForPageLoadSettle(currentWebview);
+        try {
+          currentWebview.focus();
+        } catch (e) {}
       }
-      const currentWebview = currentActiveTab.webview;
-
-      // Wait for active webview loading to settle
-      await waitForPageLoadSettle(currentWebview);
-
-      // Force webview focus to route keyboard inputs correctly
-      try {
-        currentWebview.focus();
-      } catch (e) {}
 
       // Run reasoning step via universal CLI handler
       const actionObj = await runAgentStep({
@@ -604,8 +611,9 @@ btnRun.addEventListener('click', async () => {
         goal,
         history,
         webview: currentWebview,
-        detectedVideos: currentActiveTab.detectedVideos,
-        logCallback: (msg) => addLogItem('INFO', msg)
+        detectedVideos: currentActiveTab ? currentActiveTab.detectedVideos : [],
+        logCallback: (msg) => addLogItem('INFO', msg),
+        isRealChrome
       });
 
       // Record action history
@@ -636,9 +644,9 @@ btnRun.addEventListener('click', async () => {
         break;
       }
 
-      // Execute action directly on the active webview
+      // Execute action directly on the active target (WebView or Real Chrome 150)
       try {
-        await executeAgentAction(currentWebview, actionObj, (msg) => addLogItem('INFO', msg));
+        await executeAgentAction(currentWebview, actionObj, (msg) => addLogItem('INFO', msg), isRealChrome);
       } catch (actionErr) {
         addLogItem('WARNING', `Action execution failed: ${actionErr.message}`);
         // Overwrite the last history item to explain the failure reason to the model in the next step

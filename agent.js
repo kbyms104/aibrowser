@@ -1,8 +1,16 @@
+async function execJS(webview, script, isRealChrome = false) {
+  if (isRealChrome) {
+    return await window.electronAPI.evalRealChrome({ expression: script });
+  } else {
+    return await webview.executeJavaScript(script);
+  }
+}
+
 /**
  * Clean up page DOM and retrieve interactive elements.
- * Runs inside the Electron WebView context.
+ * Runs inside the Electron WebView context or Real Chrome 150 CDP context.
  */
-async function getInteractiveElements(webview) {
+async function getInteractiveElements(webview, isRealChrome = false) {
   const script = `
     (function() {
       const elements = [];
@@ -140,9 +148,9 @@ async function getInteractiveElements(webview) {
   `;
 
   try {
-    return await webview.executeJavaScript(script);
+    return await execJS(webview, script, isRealChrome);
   } catch (err) {
-    console.error("DOM parsing failed inside WebView:", err);
+    console.error("DOM parsing failed:", err);
     return [];
   }
 }
@@ -364,12 +372,22 @@ Important: You MUST output the JSON block. Do not include extra text before or a
  * Runs one step of the agent loop.
  * Returns the parsed action object.
  */
-export async function runAgentStep({ commandTemplate, goal, history, webview, detectedVideos, logCallback }) {
-  const url = webview.getURL();
-  logCallback(`Analyzing page: ${url}`);
+export async function runAgentStep({ commandTemplate, goal, history, webview, detectedVideos, logCallback, isRealChrome = false }) {
+  let url = 'http://localhost';
+  if (isRealChrome) {
+    try {
+      url = await window.electronAPI.evalRealChrome({ expression: 'window.location.href' });
+    } catch (e) {
+      logCallback(`Real Chrome 150 URL Error: ${e.message}`);
+    }
+  } else if (webview) {
+    url = webview.getURL();
+  }
+
+  logCallback(`Analyzing page [${isRealChrome ? 'Real Chrome 150 CDP' : 'Electron WebView'}]: ${url}`);
 
   // 1. Get interactive elements
-  const elements = await getInteractiveElements(webview);
+  const elements = await getInteractiveElements(webview, isRealChrome);
   logCallback(`Detected ${elements.length} interactive elements on page.`);
   
   console.log(`[AGENT DEBUG] URL: ${url} | Detected ${elements.length} elements.`);
@@ -522,7 +540,7 @@ Decide the next action based on the state above. Return the JSON object.`;
 /**
  * Executes the chosen action inside the WebView
  */
-export async function executeAgentAction(webview, actionObj, logCallback) {
+export async function executeAgentAction(webview, actionObj, logCallback, isRealChrome = false) {
   const { action, elementId, value } = actionObj;
 
   switch (action) {
@@ -530,7 +548,11 @@ export async function executeAgentAction(webview, actionObj, logCallback) {
       if (!value) throw new Error("GOTO action requires a URL value.");
       logCallback(`Navigating to: ${value}`);
       try {
-        await webview.loadURL(value);
+        if (isRealChrome) {
+          await window.electronAPI.evalRealChrome({ expression: `window.location.href = ${JSON.stringify(value)}` });
+        } else if (webview) {
+          await webview.loadURL(value);
+        }
       } catch (err) {
         logCallback(`Navigation Warning: ${err.message}`);
       }
@@ -540,7 +562,7 @@ export async function executeAgentAction(webview, actionObj, logCallback) {
       if (elementId === null || elementId === undefined) throw new Error("CLICK action requires an elementId.");
       logCallback(`Clicking element with id: ${elementId}`);
       
-      const success = await webview.executeJavaScript(`
+      const success = await execJS(webview, `
         (function() {
           function findElementById(node, id) {
             if (!node) return null;
@@ -588,7 +610,7 @@ export async function executeAgentAction(webview, actionObj, logCallback) {
           }
           return false;
         })()
-      `);
+      `, isRealChrome);
       if (!success) throw new Error(`Failed to click element: [id=${elementId}]`);
       
       // Auto-wait 1.2s for dynamic popovers and modals to render in DOM
@@ -601,7 +623,7 @@ export async function executeAgentAction(webview, actionObj, logCallback) {
       logCallback(`Typing "${value}" into element id: ${elementId}`);
 
       const jsonValue = JSON.stringify(value);
-      const success = await webview.executeJavaScript(`
+      const success = await execJS(webview, `
         (function() {
           function findElementById(node, id) {
             if (!node) return null;
@@ -686,14 +708,14 @@ export async function executeAgentAction(webview, actionObj, logCallback) {
           }
           return false;
         })()
-      `);
+      `, isRealChrome);
       if (!success) throw new Error(`Failed to type into element: [id=${elementId}]`);
       break;
     }
     case 'SCROLL': {
       const scrollY = value === 'up' ? -500 : 500;
       logCallback(`Scrolling ${value === 'up' ? 'up' : 'down'}...`);
-      await webview.executeJavaScript(`window.scrollBy(0, ${scrollY})`);
+      await execJS(webview, `window.scrollBy(0, ${scrollY})`, isRealChrome);
       break;
     }
     case 'WAIT': {
