@@ -13,15 +13,15 @@ try {
   delete window.cdc_adoQbxzdn1b73wneD22qd_Symbol;
 } catch (e) {}
 
-const CLEAN_UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36';
+const CLEAN_UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36';
 Object.defineProperty(navigator, 'userAgent', { get: () => CLEAN_UA });
-Object.defineProperty(navigator, 'appVersion', { get: () => '5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36' });
+Object.defineProperty(navigator, 'appVersion', { get: () => '5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36' });
 
 // 2. Spoof Chrome User-Agent Client Hints (userAgentData) with realistic Chrome brands
 const userAgentData = {
   brands: [
-    { brand: 'Google Chrome', version: '128' },
-    { brand: 'Chromium', version: '128' },
+    { brand: 'Google Chrome', version: '140' },
+    { brand: 'Chromium', version: '140' },
     { brand: 'Not=A?Brand', version: '24' }
   ],
   mobile: false,

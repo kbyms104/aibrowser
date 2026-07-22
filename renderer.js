@@ -68,7 +68,7 @@ function createTab(url = 'https://www.google.com') {
   webviewEl.id = `webview-${tabId}`;
   webviewEl.setAttribute('allowpopups', '');
   webviewEl.setAttribute('disablewebsecurity', '');
-  webviewEl.setAttribute('useragent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36');
+  webviewEl.setAttribute('useragent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36');
   if (guestPreloadPath) {
     webviewEl.setAttribute('preload', guestPreloadPath);
   }
