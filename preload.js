@@ -15,5 +15,6 @@ contextBridge.exposeInMainWorld('electronAPI', {
   writeLog: (message) => ipcRenderer.invoke('write-log', message),
   readSourceFile: (filename) => ipcRenderer.invoke('read-source-file', filename),
   writeSourceFile: (filename, content) => ipcRenderer.invoke('write-source-file', { filename, content }),
-  relaunchApp: () => ipcRenderer.invoke('relaunch-app')
+  relaunchApp: () => ipcRenderer.invoke('relaunch-app'),
+  launchStealthChrome: () => ipcRenderer.invoke('launch-stealth-chrome')
 });

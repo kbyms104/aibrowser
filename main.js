@@ -538,11 +538,34 @@ app.whenReady().then(() => {
     }
   });
 
-  // 11. IPC Handler: Relaunch application
-  ipcMain.handle('relaunch-app', () => {
-    console.log('[Self-Heal] Relaunching application to apply patches...');
-    app.relaunch();
-    app.exit(0);
+  // 12. IPC Handler: Launch installed real Google Chrome v150 via CDP stealth port
+  ipcMain.handle('launch-stealth-chrome', async () => {
+    const chromePath = 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe';
+    if (!fs.existsSync(chromePath)) {
+      throw new Error(`Google Chrome executable not found at: ${chromePath}`);
+    }
+
+    const userDataDir = path.join(os.homedir(), 'AppData', 'Local', 'Google', 'Chrome', 'User Data');
+    
+    // Stealth arguments: opens CDP remote debugging port 9222 without any "AutomationControlled" yellow banners
+    const args = [
+      '--remote-debugging-port=9222',
+      '--disable-blink-features=AutomationControlled',
+      '--no-first-run',
+      '--no-default-browser-check',
+      '--start-maximized'
+    ];
+
+    console.log(`[Stealth Chrome] Launching authentic Chrome v150 from: ${chromePath}`);
+    const chromeProc = spawn(chromePath, args, { detached: true, stdio: 'ignore' });
+    chromeProc.unref();
+
+    return {
+      success: true,
+      port: 9222,
+      path: chromePath,
+      message: 'Authentic Google Chrome 150 launched cleanly on stealth CDP port 9222.'
+    };
   });
 
   createWindow();
