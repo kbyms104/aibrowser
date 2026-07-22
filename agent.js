@@ -39,8 +39,17 @@ async function getInteractiveElements(webview) {
       function findCandidates(node) {
         if (!node) return;
         
-        const interactiveSelectors = 'button, a, input, textarea, select, [role="button"], [role="link"], [contenteditable="true"]';
-        if (node.matches && node.matches(interactiveSelectors)) {
+        const interactiveSelectors = 'button, a, input, textarea, select, [role="button"], [role="link"], [role="combobox"], [role="listbox"], [role="option"], [role="menuitem"], [role="checkbox"], [role="radio"], [contenteditable="true"], [class*="category"], [id*="category"], [class*="select"], [class*="option"], [class*="btn"]';
+        let isCandidate = node.matches && node.matches(interactiveSelectors);
+        
+        if (!isCandidate && node.innerText && node.children && node.children.length === 0) {
+          const txt = node.innerText.trim();
+          if (txt === '카테고리' || txt === '카테고리 선택' || txt === '완료' || txt === '발행' || txt === '발행하기' || txt === '공개') {
+            isCandidate = true;
+          }
+        }
+
+        if (isCandidate) {
           candidates.push(node);
         }
         
@@ -315,6 +324,15 @@ Content Writing & Formatting Guidelines (CRITICAL):
   3. Format data or bullet points clearly with professional emojis or numbered lists to increase readability.
   4. Include a proper introduction, detailed core analysis sections, and a concluding summary.
   5. The length should be substantial (at least 3-4 rich paragraphs with detailed analysis) rather than a brief outline.
+
+Blog Post Editor & Publication Workflow Instructions (CRITICAL):
+- When writing and publishing a blog post (Tistory, Naver Blog, WordPress, etc.):
+  1. TITLE FIRST: Always type the title in the title field (`placeholder="제목을 입력하세요"` or similar). Never leave title blank.
+  2. CATEGORY SELECTION: Look for category dropdowns/buttons (e.g. elements with text containing "카테고리", "카테고리 선택", or `role="combobox"`). You MUST CLICK to open the category menu and select a category BEFORE clicking complete.
+  3. BODY CONTENT: Type the comprehensive, high-quality article content in the main editor body area.
+  4. TAG INPUT: If a tag input exists (`placeholder="태그입력"`, `name="tagText"`, etc.), TYPE relevant tags.
+  5. PUBLICATION: After title, category, body, and tags are filled, click "완료" or "발행". If a secondary publication overlay/modal opens (with options like visibility/public, category, thumbnail, or tags), select "공개" (Public) or fill missing fields, and click the final "발행하기" button to complete publication.
+- DO NOT rush to click "완료" before Title, Category, Body, and Tags are properly set!
 
 Rules:
 1. Only choose element IDs that are listed in the interactive elements list.
