@@ -88,17 +88,48 @@ if (window.navigator && window.navigator.permissions && window.navigator.permiss
   };
 }
 
-// 7. Prevent JS Dialog blockages (Bypass blocking alert/confirm/prompt modals)
-window.alert = (msg) => {
-  console.log(`[AetherBrowser Alert Bypassed]: ${msg}`);
-};
+// 7. Prevent JS Dialog blockages (Bypass blocking alert/confirm/prompt modals across main frame and subframes)
+function patchWindowDialogs(win) {
+  try {
+    if (!win) return;
+    win.alert = function(msg) {
+      console.log(`[AetherBrowser Alert Bypassed]: ${msg}`);
+    };
+    win.confirm = function(msg) {
+      console.log(`[AetherBrowser Confirm Handled]: ${msg}`);
+      const str = String(msg || '');
+      // If it's a draft recovery prompt (e.g. "저장된 글이 있습니다. 이어서 작성하시겠습니까?"), return false (Cancel)
+      if (str.includes('저장된') || str.includes('작성하던') || str.includes('이어서') || str.includes('임시')) {
+        return false;
+      }
+      return true;
+    };
+    win.prompt = function(msg, defaultVal) {
+      console.log(`[AetherBrowser Prompt Auto-Resolved]: ${msg}`);
+      return defaultVal || '';
+    };
+  } catch (e) {}
+}
 
-window.confirm = (msg) => {
-  console.log(`[AetherBrowser Confirm Auto-Accepted]: ${msg}`);
-  return true; // Auto-accept all confirmations
-};
+patchWindowDialogs(window);
+try { if (window.top && window.top !== window) patchWindowDialogs(window.top); } catch (e) {}
 
-window.prompt = (msg, defaultVal) => {
-  console.log(`[AetherBrowser Prompt Auto-Resolved]: ${msg}`);
-  return defaultVal || ''; // Auto-return default value for prompts
-};
+// Continuously patch any new window / iframe on DOM ready
+if (typeof document !== 'undefined') {
+  const applyToIframes = () => {
+    try {
+      const iframes = document.querySelectorAll('iframe');
+      iframes.forEach(iframe => {
+        try {
+          if (iframe.contentWindow) patchWindowDialogs(iframe.contentWindow);
+        } catch (e) {}
+      });
+    } catch (e) {}
+  };
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', applyToIframes);
+  } else {
+    applyToIframes();
+  }
+}
