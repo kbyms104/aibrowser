@@ -603,8 +603,8 @@ app.whenReady().then(() => {
 
       const timeout = setTimeout(() => {
         try { ws.close(); } catch (e) {}
-        reject(new Error('CDP execution timed out after 10s'));
-      }, 10000);
+        reject(new Error('CDP execution timed out after 25s'));
+      }, 25000);
 
       ws.onopen = () => {
         ws.send(JSON.stringify({
@@ -613,7 +613,8 @@ app.whenReady().then(() => {
           params: {
             expression: expression,
             returnByValue: true,
-            awaitPromise: true
+            awaitPromise: false,
+            userGesture: true
           }
         }));
       };
