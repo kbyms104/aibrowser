@@ -105,6 +105,11 @@ async function getInteractiveElements(webview) {
         const role = el.getAttribute('role') || '';
         const tagName = el.tagName.toLowerCase();
         const name = el.getAttribute('name') || '';
+        const value = (el.value !== undefined && el.value !== null) ? String(el.value).substring(0, 50) : '';
+        const ariaExpanded = el.getAttribute('aria-expanded') || '';
+        const ariaHaspopup = el.getAttribute('aria-haspopup') || '';
+        const idAttr = el.id || '';
+        const className = el.className && typeof el.className === 'string' ? el.className.substring(0, 50) : '';
 
         elements.push({
           id: elementId,
@@ -116,6 +121,11 @@ async function getInteractiveElements(webview) {
           title,
           role,
           name,
+          value,
+          ariaExpanded,
+          ariaHaspopup,
+          idAttr,
+          className,
           boundingBox: {
             x: Math.round(rect.x),
             y: Math.round(rect.y),
@@ -142,13 +152,16 @@ async function getInteractiveElements(webview) {
  */
 function formatElements(elements) {
   return elements.map(el => {
-    let parts = [`[${el.tagName} id=${el.id}]`];
+    let parts = [`[${el.tagName}${el.idAttr ? `#${el.idAttr}` : ''} id=${el.id}]`];
     if (el.text) parts.push(`text: "${el.text}"`);
+    if (el.value) parts.push(`value: "${el.value}"`);
     if (el.placeholder) parts.push(`placeholder: "${el.placeholder}"`);
     if (el.ariaLabel) parts.push(`ariaLabel: "${el.ariaLabel}"`);
     if (el.title) parts.push(`title: "${el.title}"`);
     if (el.type) parts.push(`type: "${el.type}"`);
     if (el.name) parts.push(`name: "${el.name}"`);
+    if (el.role) parts.push(`role: "${el.role}"`);
+    if (el.ariaExpanded) parts.push(`ariaExpanded: "${el.ariaExpanded}"`);
     parts.push(`pos: (${el.boundingBox.x}, ${el.boundingBox.y}, w: ${el.boundingBox.width}, h: ${el.boundingBox.height})`);
     return parts.join(' | ');
   }).join('\n');
@@ -325,14 +338,16 @@ Content Writing & Formatting Guidelines (CRITICAL):
   4. Include a proper introduction, detailed core analysis sections, and a concluding summary.
   5. The length should be substantial (at least 3-4 rich paragraphs with detailed analysis) rather than a brief outline.
 
-Blog Post Editor & Publication Workflow Instructions (CRITICAL):
-- When writing and publishing a blog post (Tistory, Naver Blog, WordPress, etc.):
-  1. TITLE FIRST: Always type the title in the title field (`placeholder="제목을 입력하세요"` or similar). Never leave title blank.
-  2. CATEGORY SELECTION: Look for category dropdowns/buttons (e.g. elements with text containing "카테고리", "카테고리 선택", or `role="combobox"`). You MUST CLICK to open the category menu and select a category BEFORE clicking complete.
-  3. BODY CONTENT: Type the comprehensive, high-quality article content in the main editor body area.
-  4. TAG INPUT: If a tag input exists (`placeholder="태그입력"`, `name="tagText"`, etc.), TYPE relevant tags.
-  5. PUBLICATION: After title, category, body, and tags are filled, click "완료" or "발행". If a secondary publication overlay/modal opens (with options like visibility/public, category, thumbnail, or tags), select "공개" (Public) or fill missing fields, and click the final "발행하기" button to complete publication.
-- DO NOT rush to click "완료" before Title, Category, Body, and Tags are properly set!
+Universal Form & Content Creation Protocol (CRITICAL):
+- On ANY website (Tistory, Naver Blog, WordPress, Medium, Notion, Twitter/X, GitHub, Reddit, LinkedIn, Shopify, etc.), when performing a creation, posting, editing, or submission task:
+  1. SCAN ALL FORM FIELDS & ATTRIBUTES: Observe every input, textarea, dropdown/combobox, file upload, and select control available on the screen. Look at `placeholder`, `text`, `value`, `role`, and `name` attributes.
+  2. COMPLETE ALL METADATA & CONTENT FIELDS BEFORE SUBMISSION:
+     - Title/Subject Field: Fill in the main title/subject if empty (`placeholder` containing Title/Subject/제목). Never leave title blank.
+     - Category/Topic Selector: If a category/topic selector exists (e.g. elements with ARIA roles `combobox`, `listbox`, `select`, or text/class containing Category/Topic/카테고리/분류), CLICK to open the menu and SELECT an appropriate category BEFORE submitting.
+     - Content/Body Area: Type the comprehensive, high-quality main content body into the main editor area.
+     - Tags/Keywords Field: Type relevant tags or keywords if present (e.g., `placeholder` or `name` containing Tag/Keyword/태그/키워드).
+  3. AUDIT BEFORE FINAL SUBMIT: NEVER click final submission or completion buttons (such as "Submit", "Publish", "Post", "Save", "Complete", "완료", "발행", "등록", "전송") while key input fields (Title, Category, Body, Tags) remain blank or unselected on the screen.
+  4. HANDLE MULTI-STAGE MODALS: If clicking "Submit" or "Publish" opens a secondary confirmation modal or settings layer (e.g. asking for visibility/public/private, category, thumbnail, or tags), inspect the modal elements, select "Public/공개" or fill missing settings, and click the final confirmation button to complete.
 
 Rules:
 1. Only choose element IDs that are listed in the interactive elements list.
