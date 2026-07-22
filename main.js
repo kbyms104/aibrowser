@@ -570,6 +570,14 @@ app.whenReady().then(() => {
     const chromeProc = spawn(chromePath, args, { detached: true, stdio: 'ignore' });
     chromeProc.unref();
 
+    // Re-focus AetherBrowser main window so the user can immediately click and type goals
+    setTimeout(() => {
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.show();
+        mainWindow.focus();
+      }
+    }, 800);
+
     return {
       success: true,
       port: 9222,

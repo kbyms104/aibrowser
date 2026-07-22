@@ -1008,11 +1008,17 @@ if (btnLaunchChrome) {
     try {
       const res = await window.electronAPI.launchStealthChrome();
       addLogItem('INFO', `[스텔스 구동 완료] ${res.message} (CDP 포트: ${res.port})`);
-      alert("진짜 Google Chrome 150 스텔스 실행 완료!\n\n노란색 '자동 제어' 경고 띠 없이 포트 9222번으로 구동되었습니다.\n이제 구글/티스토리/네이버 차단 없이 100% 안전하게 자동화 및 로그인을 진행할 수 있습니다!");
+      
+      // Auto-focus goal input textarea and ensure it is fully enabled
+      const goalInput = document.getElementById('goal-input');
+      if (goalInput) {
+        goalInput.disabled = false;
+        goalInput.readOnly = false;
+        goalInput.focus();
+      }
     } catch (err) {
       console.error(err);
       addLogItem('ERROR', `Chrome 150 구동 실패: ${err.message}`);
-      alert("Chrome 구동 실패: " + err.message);
     }
   });
 }
