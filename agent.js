@@ -543,6 +543,12 @@ Decide the next action based on the state above. Return the JSON object.`;
 export async function executeAgentAction(webview, actionObj, logCallback, isRealChrome = false) {
   const { action, elementId, value } = actionObj;
 
+  if (isRealChrome && ['GOTO', 'CLICK', 'TYPE', 'SCROLL'].includes(action)) {
+    logCallback(`[CDP Native Action] ${action} ${value || ''}`);
+    await window.electronAPI.cdpAction({ action, elementId, value });
+    return;
+  }
+
   switch (action) {
     case 'GOTO': {
       if (!value) throw new Error("GOTO action requires a URL value.");

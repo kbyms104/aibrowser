@@ -651,6 +651,77 @@ app.whenReady().then(() => {
     }
   });
 
+  // 15. IPC Handler: Native CDP Actions (GOTO, CLICK, TYPE, SCROLL) directly on Real Chrome 150
+  ipcMain.handle('cdp-action', async (event, { action, elementId, value }) => {
+    const isConnected = realChromeBrowser && (typeof realChromeBrowser.isConnected === 'function' ? realChromeBrowser.isConnected() : realChromeBrowser.connected);
+    if (!realChromeBrowser || !isConnected) {
+      realChromeBrowser = await puppeteer.connect({
+        browserURL: 'http://127.0.0.1:9222',
+        defaultViewport: null
+      });
+    }
+
+    const pages = await realChromeBrowser.pages();
+    const page = pages.find(p => !p.url().startsWith('chrome-extension://')) || pages[0];
+    if (!page) {
+      throw new Error('No active page tab found in Real Chrome 150 on port 9222.');
+    }
+
+    if (action === 'GOTO') {
+      console.log(`[CDP Native] GOTO ${value}`);
+      await page.goto(value, { waitUntil: 'domcontentloaded', timeout: 30000 });
+      return { success: true };
+    }
+
+    if (action === 'CLICK') {
+      console.log(`[CDP Native] CLICK elementId: ${elementId}`);
+      const selector = `[data-agent-id="${elementId}"]`;
+      try {
+        await page.waitForSelector(selector, { timeout: 5000 });
+        await page.click(selector);
+      } catch (e) {
+        await page.evaluate((id) => {
+          const el = document.querySelector(`[data-agent-id="${id}"]`);
+          if (el) el.click();
+        }, elementId);
+      }
+      await new Promise(r => setTimeout(r, 1200));
+      return { success: true };
+    }
+
+    if (action === 'TYPE') {
+      console.log(`[CDP Native] TYPE elementId: ${elementId} value: "${value}"`);
+      const selector = `[data-agent-id="${elementId}"]`;
+      try {
+        await page.waitForSelector(selector, { timeout: 5000 });
+        await page.click(selector);
+        await page.type(selector, value, { delay: 30 });
+        await page.keyboard.press('Enter');
+      } catch (e) {
+        await page.evaluate((id, val) => {
+          const el = document.querySelector(`[data-agent-id="${id}"]`);
+          if (el) {
+            el.focus();
+            if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') el.value = val;
+            else el.innerText = val;
+            el.dispatchEvent(new Event('input', { bubbles: true }));
+            el.dispatchEvent(new Event('change', { bubbles: true }));
+          }
+        }, elementId, value);
+      }
+      return { success: true };
+    }
+
+    if (action === 'SCROLL') {
+      console.log(`[CDP Native] SCROLL ${value}`);
+      const distance = value === 'up' ? -500 : 500;
+      await page.evaluate((y) => window.scrollBy(0, y), distance);
+      return { success: true };
+    }
+
+    return { success: true };
+  });
+
   createWindow();
 
   app.on('activate', () => {

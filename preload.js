@@ -18,5 +18,6 @@ contextBridge.exposeInMainWorld('electronAPI', {
   relaunchApp: () => ipcRenderer.invoke('relaunch-app'),
   launchStealthChrome: () => ipcRenderer.invoke('launch-stealth-chrome'),
   evalRealChrome: (params) => ipcRenderer.invoke('eval-real-chrome', params),
-  getRealChromeState: () => ipcRenderer.invoke('get-real-chrome-state')
+  getRealChromeState: () => ipcRenderer.invoke('get-real-chrome-state'),
+  cdpAction: (params) => ipcRenderer.invoke('cdp-action', params)
 });
