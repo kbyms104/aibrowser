@@ -6,6 +6,7 @@ import { exec, spawn } from 'child_process';
 import fs from 'fs';
 import os from 'os';
 import http from 'http';
+import puppeteer from 'puppeteer-core';
 
 dotenv.config();
 
@@ -604,65 +605,25 @@ app.whenReady().then(() => {
     };
   });
 
-  // Helper function: Evaluate JS in Real Chrome 150 active tab via WebSocket CDP
+  let realChromeBrowser = null;
+
+  // Helper function: Evaluate JS in Real Chrome 150 active tab via Official Puppeteer CDP Bridge
   async function evalInRealChrome(expression) {
-    const listRes = await fetch('http://127.0.0.1:9222/json');
-    if (!listRes.ok) throw new Error('Real Chrome 150 is not running on port 9222.');
-    const targets = await listRes.json();
-    const target = targets.find(t => t.type === 'page' && !t.url.startsWith('chrome-extension://')) || targets[0];
-    if (!target || !target.webSocketDebuggerUrl) {
+    if (!realChromeBrowser || !realChromeBrowser.isConnected()) {
+      realChromeBrowser = await puppeteer.connect({
+        browserURL: 'http://127.0.0.1:9222',
+        defaultViewport: null
+      });
+    }
+
+    const pages = await realChromeBrowser.pages();
+    const page = pages.find(p => !p.url().startsWith('chrome-extension://')) || pages[0];
+    if (!page) {
       throw new Error('No active page tab found in Real Chrome 150 on port 9222.');
     }
 
-    return new Promise((resolve, reject) => {
-      const ws = new WebSocket(target.webSocketDebuggerUrl);
-      const msgId = Date.now() + Math.floor(Math.random() * 1000);
-
-      const timeout = setTimeout(() => {
-        try { ws.close(); } catch (e) {}
-        reject(new Error('CDP execution timed out after 25s'));
-      }, 25000);
-
-      ws.onopen = () => {
-        ws.send(JSON.stringify({ id: 1, method: 'Runtime.enable' }));
-        ws.send(JSON.stringify({
-          id: msgId,
-          method: 'Runtime.evaluate',
-          params: {
-            expression: expression,
-            returnByValue: true,
-            awaitPromise: false,
-            userGesture: true
-          }
-        }));
-      };
-
-      ws.onmessage = (event) => {
-        try {
-          const data = JSON.parse(event.data);
-          if (data.id === msgId) {
-            clearTimeout(timeout);
-            ws.close();
-            if (data.error) {
-              reject(new Error(data.error.message));
-            } else if (data.result && data.result.exceptionDetails) {
-              reject(new Error(data.result.exceptionDetails.text || 'CDP script evaluation exception'));
-            } else {
-              resolve(data.result?.result?.value);
-            }
-          }
-        } catch (e) {
-          clearTimeout(timeout);
-          try { ws.close(); } catch (err) {}
-          reject(e);
-        }
-      };
-
-      ws.onerror = (err) => {
-        clearTimeout(timeout);
-        reject(new Error('CDP WebSocket connection error'));
-      };
-    });
+    // Evaluate expression or function string cleanly via Puppeteer CDP Engine
+    return await page.evaluate(new Function(`return (${expression})`)());
   }
 
   // 13. IPC Handler: Evaluate JS in Real Chrome 150
