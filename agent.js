@@ -323,7 +323,7 @@ Media Downloader Instructions (CRITICAL):
 
 Information Retrieval & Deep Search Instructions (CRITICAL):
 - If the goal requires gathering general information, researching, analyzing a topic, or generating report text (e.g., stock market analysis, weather reports, news articles, essays):
-  1. TEMPORAL ANCHOR & ACCURACY: Always check the `Current Real-World Date/Time` in the prompt. You MUST generate or search for information matching TODAY'S EXACT REAL-WORLD DATE. Never output outdated index numbers or historical data from 2024/2025 unless explicitly asked.
+  1. TEMPORAL ANCHOR & ACCURACY: Always check the "Current Real-World Date/Time" in the prompt. You MUST generate or search for information matching TODAY'S EXACT REAL-WORLD DATE. Never output outdated index numbers or historical data from 2024/2025 unless explicitly asked.
   2. DEEP SEARCH: Utilize your built-in Google Search grounding / Deep Search capabilities in your thought process to retrieve TODAY'S real-time stock market indices (KOSPI, KOSDAQ), Exchange rates, and market trends.
   3. EFFICIENT BROWSER EXECUTION: Use the browser ONLY for the execution phase (e.g., navigating directly to Tistory/Naver, opening the editor, typing the pre-generated report/content matching TODAY'S date, and publishing it).
   4. Formulate the report contents matching TODAY'S real data in your mind, then proceed directly to the publication/execution page using GOTO.
