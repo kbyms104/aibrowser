@@ -571,19 +571,36 @@ app.whenReady().then(() => {
     const chromeProc = spawn(chromePath, args, { detached: true, stdio: 'ignore' });
     chromeProc.unref();
 
+    // Poll until port 9222 CDP endpoint is active (up to 10 attempts, 500ms intervals)
+    let cdpReady = false;
+    for (let i = 0; i < 10; i++) {
+      await new Promise(r => setTimeout(r, 500));
+      try {
+        const res = await fetch('http://127.0.0.1:9222/json');
+        if (res.ok) {
+          cdpReady = true;
+          break;
+        }
+      } catch (e) {}
+    }
+
     // Re-focus AetherBrowser main window so the user can immediately click and type goals
     setTimeout(() => {
       if (mainWindow && !mainWindow.isDestroyed()) {
         mainWindow.show();
         mainWindow.focus();
       }
-    }, 800);
+    }, 500);
+
+    if (!cdpReady) {
+      throw new Error('Chrome 150 launched but CDP port 9222 failed to respond within 5 seconds.');
+    }
 
     return {
       success: true,
       port: 9222,
       path: chromePath,
-      message: 'Authentic Google Chrome 150 launched cleanly on stealth CDP port 9222.'
+      message: 'Authentic Google Chrome 150 launched cleanly and CDP port 9222 is active!'
     };
   });
 
@@ -607,6 +624,7 @@ app.whenReady().then(() => {
       }, 25000);
 
       ws.onopen = () => {
+        ws.send(JSON.stringify({ id: 1, method: 'Runtime.enable' }));
         ws.send(JSON.stringify({
           id: msgId,
           method: 'Runtime.evaluate',
