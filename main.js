@@ -81,6 +81,9 @@ function createWindow() {
   });
 }
 
+// Disable Chromium C++ level automation flags to prevent Google/Cloudflare bot detection
+app.commandLine.appendSwitch('disable-blink-features', 'AutomationControlled');
+
 const CLEAN_CHROME_UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36';
 app.userAgentFallback = CLEAN_CHROME_UA;
 
