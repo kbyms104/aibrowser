@@ -609,7 +609,8 @@ app.whenReady().then(() => {
 
   // Helper function: Evaluate JS in Real Chrome 150 active tab via Official Puppeteer CDP Bridge
   async function evalInRealChrome(expression) {
-    if (!realChromeBrowser || !realChromeBrowser.isConnected()) {
+    const isConnected = realChromeBrowser && (typeof realChromeBrowser.isConnected === 'function' ? realChromeBrowser.isConnected() : realChromeBrowser.connected);
+    if (!realChromeBrowser || !isConnected) {
       realChromeBrowser = await puppeteer.connect({
         browserURL: 'http://127.0.0.1:9222',
         defaultViewport: null
