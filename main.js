@@ -81,16 +81,29 @@ function createWindow() {
   });
 }
 
+const CLEAN_CHROME_UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36';
+app.userAgentFallback = CLEAN_CHROME_UA;
+
 app.whenReady().then(() => {
   // Start local server
   startLocalServer();
 
-  // Set default User Agent for all requests in the app to avoid Electron signature exposure
-  const cleanUserAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36';
-  session.defaultSession.setUserAgent(cleanUserAgent);
+  // Set default User Agent for all sessions
+  session.defaultSession.setUserAgent(CLEAN_CHROME_UA);
+
+  // Intercept all outgoing HTTP headers to strip Electron signatures from Google OAuth endpoints
+  session.defaultSession.webRequest.onBeforeSendHeaders((details, callback) => {
+    details.requestHeaders['User-Agent'] = CLEAN_CHROME_UA;
+    delete details.requestHeaders['X-Electron'];
+    callback({ cancel: false, requestHeaders: details.requestHeaders });
+  });
 
   // Handle window.open and target="_blank" from webviews by sending an event to the renderer to create a tab
   app.on('web-contents-created', (event, contents) => {
+    try {
+      contents.setUserAgent(CLEAN_CHROME_UA);
+    } catch (e) {}
+
     contents.setWindowOpenHandler((details) => {
       if (mainWindow && !mainWindow.isDestroyed()) {
         mainWindow.webContents.send('open-tab-request', details.url);
