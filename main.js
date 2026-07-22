@@ -12,6 +12,17 @@ dotenv.config();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+// Link PC Chrome User Data Directory if present so logged-in Google sessions are inherited seamlessly
+const pcChromeUserData = path.join(os.homedir(), 'AppData', 'Local', 'Google', 'Chrome', 'User Data');
+if (fs.existsSync(pcChromeUserData)) {
+  try {
+    app.setPath('userData', pcChromeUserData);
+    console.log(`[Session Sync] Successfully linked PC Chrome User Data path: ${pcChromeUserData}`);
+  } catch (e) {
+    console.warn('[Session Sync] Warning setting Chrome User Data path:', e.message);
+  }
+}
+
 let mainWindow = null;
 let staticServer = null;
 
