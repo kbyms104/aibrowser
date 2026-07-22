@@ -86,7 +86,7 @@ app.whenReady().then(() => {
   startLocalServer();
 
   // Set default User Agent for all requests in the app to avoid Electron signature exposure
-  const cleanUserAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36';
+  const cleanUserAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36';
   session.defaultSession.setUserAgent(cleanUserAgent);
 
   // Handle window.open and target="_blank" from webviews by sending an event to the renderer to create a tab

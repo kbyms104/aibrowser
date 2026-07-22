@@ -2,17 +2,23 @@
 // This script runs inside the guest page BEFORE any other scripts execute,
 // masking all Electron/automation fingerprints to make the browser look 100% human.
 
-// 1. Hide Automation Webdriver property
+// 1. Hide Automation Webdriver property & Electron traces
 Object.defineProperty(navigator, 'webdriver', {
   get: () => undefined
 });
 
-// 2. Spoof Chrome User-Agent Client Hints (userAgentData)
+try {
+  delete window.cdc_adoQbxzdn1b73wneD22qd_Array;
+  delete window.cdc_adoQbxzdn1b73wneD22qd_Promise;
+  delete window.cdc_adoQbxzdn1b73wneD22qd_Symbol;
+} catch (e) {}
+
+// 2. Spoof Chrome User-Agent Client Hints (userAgentData) with realistic Chrome brands
 const userAgentData = {
   brands: [
-    { brand: 'Not A(Browser', version: '99' },
-    { brand: 'Google Chrome', version: '122' },
-    { brand: 'Chromium', version: '122' }
+    { brand: 'Google Chrome', version: '126' },
+    { brand: 'Chromium', version: '126' },
+    { brand: 'Not=A?Brand', version: '24' }
   ],
   mobile: false,
   platform: 'Windows'
