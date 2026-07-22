@@ -547,10 +547,9 @@ app.whenReady().then(() => {
 
     const userDataDir = path.join(os.homedir(), 'AppData', 'Local', 'Google', 'Chrome', 'User Data');
     
-    // Stealth arguments: opens CDP remote debugging port 9222 without any "AutomationControlled" yellow banners
+    // Clean arguments: opens CDP remote debugging port 9222 without triggering flags warning
     const args = [
       '--remote-debugging-port=9222',
-      '--disable-blink-features=AutomationControlled',
       '--no-first-run',
       '--no-default-browser-check',
       '--start-maximized'
