@@ -574,6 +574,14 @@ export async function executeAgentAction(webview, actionObj, logCallback) {
           const el = findElementById(document, "${elementId}");
           if (el) {
             el.scrollIntoView({ block: 'center' });
+            
+            // Dispatch full event sequence for custom frameworks (React, Vue, Tistory, Naver)
+            const opts = { bubbles: true, cancelable: true, view: window, buttons: 1 };
+            try { el.dispatchEvent(new PointerEvent('pointerdown', opts)); } catch(e) {}
+            try { el.dispatchEvent(new MouseEvent('mousedown', opts)); } catch(e) {}
+            try { el.dispatchEvent(new PointerEvent('pointerup', opts)); } catch(e) {}
+            try { el.dispatchEvent(new MouseEvent('mouseup', opts)); } catch(e) {}
+            
             el.click();
             return true;
           }
@@ -581,6 +589,9 @@ export async function executeAgentAction(webview, actionObj, logCallback) {
         })()
       `);
       if (!success) throw new Error(`Failed to click element: [id=${elementId}]`);
+      
+      // Auto-wait 1.2s for dynamic popovers and modals to render in DOM
+      await new Promise(r => setTimeout(r, 1200));
       break;
     }
     case 'TYPE': {
