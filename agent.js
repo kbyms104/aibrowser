@@ -340,12 +340,12 @@ Content Writing & Formatting Guidelines (CRITICAL):
 
 Universal Form & Content Creation Protocol (CRITICAL):
 - On ANY website (Tistory, Naver Blog, WordPress, Medium, Notion, Twitter/X, GitHub, Reddit, LinkedIn, Shopify, etc.), when performing a creation, posting, editing, or submission task:
-  1. SCAN ALL FORM FIELDS & ATTRIBUTES: Observe every input, textarea, dropdown/combobox, file upload, and select control available on the screen. Look at `placeholder`, `text`, `value`, `role`, and `name` attributes.
+  1. SCAN ALL FORM FIELDS & ATTRIBUTES: Observe every input, textarea, dropdown/combobox, file upload, and select control available on the screen. Look at "placeholder", "text", "value", "role", and "name" attributes.
   2. COMPLETE ALL METADATA & CONTENT FIELDS BEFORE SUBMISSION:
-     - Title/Subject Field: Fill in the main title/subject if empty (`placeholder` containing Title/Subject/제목). Never leave title blank.
-     - Category/Topic Selector: If a category/topic selector exists (e.g. elements with ARIA roles `combobox`, `listbox`, `select`, or text/class containing Category/Topic/카테고리/분류), CLICK to open the menu and SELECT an appropriate category BEFORE submitting.
+     - Title/Subject Field: Fill in the main title/subject if empty ("placeholder" containing Title/Subject/제목). Never leave title blank.
+     - Category/Topic Selector: If a category/topic selector exists (e.g. elements with ARIA roles "combobox", "listbox", "select", or text/class containing Category/Topic/카테고리/분류), CLICK to open the menu and SELECT an appropriate category BEFORE submitting.
      - Content/Body Area: Type the comprehensive, high-quality main content body into the main editor area.
-     - Tags/Keywords Field: Type relevant tags or keywords if present (e.g., `placeholder` or `name` containing Tag/Keyword/태그/키워드).
+     - Tags/Keywords Field: Type relevant tags or keywords if present (e.g., "placeholder" or "name" containing Tag/Keyword/태그/키워드).
   3. AUDIT BEFORE FINAL SUBMIT: NEVER click final submission or completion buttons (such as "Submit", "Publish", "Post", "Save", "Complete", "완료", "발행", "등록", "전송") while key input fields (Title, Category, Body, Tags) remain blank or unselected on the screen.
   4. HANDLE MULTI-STAGE MODALS: If clicking "Submit" or "Publish" opens a secondary confirmation modal or settings layer (e.g. asking for visibility/public/private, category, thumbnail, or tags), inspect the modal elements, select "Public/공개" or fill missing settings, and click the final confirmation button to complete.
 
