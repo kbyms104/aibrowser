@@ -70,7 +70,11 @@ Object.defineProperty(navigator, 'plugins', {
   }
 });
 
-// 5. Inject window.chrome object (Commonly missing in Electron/Automation environments)
+Object.defineProperty(navigator, 'vendor', { get: () => 'Google Inc.' });
+Object.defineProperty(navigator, 'deviceMemory', { get: () => 8 });
+Object.defineProperty(navigator, 'hardwareConcurrency', { get: () => 8 });
+
+// 5. Inject window.chrome object (Authentic Google Chrome V8 properties)
 window.chrome = {
   app: {
     isInstalled: false,
@@ -84,6 +88,24 @@ window.chrome = {
     PlatformNaclArch: { ARM: 'arm', MIPS: 'mips', MIPS64: 'mips64', X86_32: 'x86-32', X86_64: 'x86-64' },
     PlatformOs: { ANDROID: 'android', CROS: 'cros', LINUX: 'linux', MAC: 'mac', OPENBSD: 'openbsd', WIN: 'win' },
     RequestUpdateCheckStatus: { NO_UPDATE: 'no_update', THROTTLED: 'throttled', UPDATE_AVAILABLE: 'update_available' }
+  },
+  csi: function() { return { startE: Date.now(), onloadT: Date.now(), pageT: 100, tran: 15 }; },
+  loadTimes: function() {
+    return {
+      commitLoadTime: Date.now() / 1000,
+      connectionInfo: 'h2',
+      finishDocumentLoadTime: Date.now() / 1000,
+      finishLoadTime: Date.now() / 1000,
+      firstPaintAfterLoadTime: 0,
+      firstPaintTime: Date.now() / 1000,
+      navigationType: 'Other',
+      npnNegotiatedProtocol: 'h2',
+      requestTime: Date.now() / 1000,
+      startLoadTime: Date.now() / 1000,
+      wasAlternateProtocolAvailable: false,
+      wasFetchedViaSpdy: true,
+      wasNpnNegotiated: true
+    };
   }
 };
 
