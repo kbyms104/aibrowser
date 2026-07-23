@@ -552,30 +552,46 @@ app.whenReady().then(() => {
 
   // 12. IPC Handler: Launch installed real Google Chrome v150 via CDP stealth port
   ipcMain.handle('launch-stealth-chrome', async () => {
+    // 1. If CDP port 9222 is already active, reuse it immediately
+    try {
+      const checkRes = await fetch('http://127.0.0.1:9222/json');
+      if (checkRes.ok) {
+        console.log('[Stealth Chrome] CDP port 9222 is already active. Reusing running instance.');
+        return {
+          success: true,
+          port: 9222,
+          message: 'Reusing active Google Chrome instance on CDP port 9222.'
+        };
+      }
+    } catch (e) {}
+
     const chromePath = 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe';
     if (!fs.existsSync(chromePath)) {
       throw new Error(`Google Chrome executable not found at: ${chromePath}`);
     }
 
-    const userDataDir = path.join(os.homedir(), 'AppData', 'Local', 'Google', 'Chrome', 'User Data');
-    
-    // Launch Chrome using the user's main Chrome User Data profile so existing logins are preserved
+    // Use a dedicated profile directory so Chrome ALWAYS spawns a new process with port 9222 active,
+    // regardless of whether standard Chrome is currently running in the background.
+    const profileDir = path.join(os.homedir(), 'AppData', 'Local', 'Google', 'Chrome', 'User Data', 'AetherProfile');
+    if (!fs.existsSync(profileDir)) {
+      try { fs.mkdirSync(profileDir, { recursive: true }); } catch (e) {}
+    }
+
     const args = [
       '--remote-debugging-port=9222',
-      `--user-data-dir=${userDataDir}`,
-      '--profile-directory=Default',
+      `--user-data-dir=${profileDir}`,
       '--no-first-run',
       '--no-default-browser-check',
       '--start-maximized'
     ];
 
-    console.log(`[Stealth Chrome] Launching authentic Chrome v150 from: ${chromePath}`);
+    console.log(`[Stealth Chrome] Launching authentic Chrome v150 on port 9222 with dedicated profile: ${profileDir}`);
     const chromeProc = spawn(chromePath, args, { detached: true, stdio: 'ignore' });
     chromeProc.unref();
 
-    // Poll until port 9222 CDP endpoint is active (up to 10 attempts, 500ms intervals)
+    // Poll until port 9222 CDP endpoint is active (up to 15 attempts, 500ms intervals)
     let cdpReady = false;
-    for (let i = 0; i < 10; i++) {
+    for (let i = 0; i < 15; i++) {
       await new Promise(r => setTimeout(r, 500));
       try {
         const res = await fetch('http://127.0.0.1:9222/json');
@@ -595,7 +611,7 @@ app.whenReady().then(() => {
     }, 500);
 
     if (!cdpReady) {
-      throw new Error('Chrome 150 launched but CDP port 9222 failed to respond within 5 seconds.');
+      throw new Error('Chrome 150 launched but CDP port 9222 failed to respond. Please close any running Chrome processes and try again.');
     }
 
     return {
