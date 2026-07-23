@@ -1,7 +1,7 @@
 {
   "name": "ai-desktop-browser",
-  "version": "1.0.0",
-  "description": "A custom desktop web browser with integrated AI automation",
+  "version": "2.0.0",
+  "description": "Clean, Modern AI Desktop Browser with Integrated Autonomous Agent System",
   "main": "main.js",
   "type": "module",
   "scripts": {
@@ -9,7 +9,7 @@
   },
   "dependencies": {
     "dotenv": "^16.4.5",
-    "puppeteer-core": "^25.3.0"
+    "puppeteer-core": "^22.12.0"
   },
   "devDependencies": {
     "electron": "^43.2.0"
