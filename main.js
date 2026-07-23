@@ -557,12 +557,13 @@ app.whenReady().then(() => {
       throw new Error(`Google Chrome executable not found at: ${chromePath}`);
     }
 
-    const profileDir = path.join(os.homedir(), 'AppData', 'Local', 'Google', 'Chrome', 'User Data', 'AetherProfile');
+    const userDataDir = path.join(os.homedir(), 'AppData', 'Local', 'Google', 'Chrome', 'User Data');
     
-    // Clean arguments: opens CDP remote debugging port 9222 cleanly with a dedicated profile
+    // Launch Chrome using the user's main Chrome User Data profile so existing logins are preserved
     const args = [
       '--remote-debugging-port=9222',
-      `--user-data-dir=${profileDir}`,
+      `--user-data-dir=${userDataDir}`,
+      '--profile-directory=Default',
       '--no-first-run',
       '--no-default-browser-check',
       '--start-maximized'
