@@ -640,8 +640,8 @@ app.whenReady().then(() => {
       throw new Error('No active page tab found in Real Chrome 150 on port 9222.');
     }
 
-    // Evaluate expression or function string cleanly via Puppeteer CDP Engine
-    return await page.evaluate(new Function(`return (${expression})`)());
+    // Evaluate expression string directly in Chrome page context via Puppeteer
+    return await page.evaluate(expression);
   }
 
   // 13. IPC Handler: Evaluate JS in Real Chrome 150
